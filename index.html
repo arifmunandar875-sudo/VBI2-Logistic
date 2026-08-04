@@ -6,13 +6,9 @@
   <title>VBI2 data logistic IKK - Cloud Connected</title>
   
   <script src="https://cdn.tailwindcss.com"></script>
-  
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
-  
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-
   <script src="https://unpkg.com/lucide@latest"></script>
 
   <style>
@@ -225,7 +221,7 @@
               <div>
                 <label class="block text-[9px] font-bold text-slate-400 uppercase mb-0.5">Pencarian</label>
                 <div class="relative">
-                  <input type="text" id="filter-search" oninput="window.applyFilters()" placeholder="Tujuan, Buyer, dll..." class="w-full pl-7 pr-2 py-1 text-xs bg-slate-50 border border-slate-200 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+                  <input type="text" id="filter-search" oninput="window.applyFilters()" placeholder="Tujuan, Buyer, Delivery, dll..." class="w-full pl-7 pr-2 py-1 text-xs bg-slate-50 border border-slate-200 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500" />
                   <i data-lucide="search" class="w-3 h-3 text-slate-400 absolute left-2.5 top-2.5"></i>
                 </div>
               </div>
@@ -267,6 +263,7 @@
               <div class="p-1 bg-amber-50 rounded text-amber-600 print:hidden"><i data-lucide="tags" class="w-4 h-4"></i></div>
             </div>
           </div>
+
           <div id="chart-grid" class="grid grid-cols-2 gap-2">
             <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-2">
               <h3 class="font-bold text-slate-900 text-[9px] uppercase tracking-wider mb-1 flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-indigo-600"></span> ETD per Day</h3>
@@ -316,7 +313,7 @@
               <table id="details-table" class="w-full text-left border-collapse excel-table table-auto">
                 <thead>
                   <tr class="bg-slate-50 text-slate-600 font-bold uppercase">
-                    <th rowspan="2" class="px-2">SP</th><th rowspan="2" class="px-2">ETD</th><th rowspan="2" class="px-2">Ship To Party</th><th rowspan="2" class="px-2">Destination Port</th><th rowspan="2" class="px-2">Vessel</th><th rowspan="2" class="px-2">Delivery</th><th rowspan="2" class="px-2">Cargo Remark</th>
+                    <th rowspan="2" class="px-2">SP</th><th rowspan="2" class="px-2">ETD</th><th rowspan="2" class="px-2">Ship To Party</th><th rowspan="2" class="px-2">Destination Port</th><th rowspan="2" class="px-2">Vessel</th><th rowspan="2" class="px-2">Voyage</th><th rowspan="2" class="px-2">DO Number</th><th rowspan="2" class="px-2">MAD</th><th rowspan="2" class="px-2">Selisih<br/>(Hari)</th><th rowspan="2" class="px-2">Delivery</th><th rowspan="2" class="px-2">Cargo Remark</th>
                     <th colspan="3" class="text-center px-2 bg-slate-100 border-b">Total</th>
                     <th colspan="3" class="text-center px-2 bg-indigo-50 text-indigo-900 border-b">Ready Outs</th>
                     <th rowspan="2" class="text-right px-2">Net Weight</th>
@@ -681,13 +678,21 @@
         }
     }
 
-    // Fungsi otomatisasi pemetaan kode SP (8712 -> PM3, 871C -> PM1)
     function normalizeSP(rawSp) {
       if (!rawSp) return "";
       const clean = rawSp.toString().trim();
       if (clean === "8712") return "8712 (PM3)";
       if (clean.toUpperCase() === "871C") return "871C (PM1)";
       return clean;
+    }
+
+    function getDaysDiff(madStr, etdStr) {
+      if (!madStr || !etdStr || madStr === "-" || etdStr === "-") return "-";
+      const d1 = new Date(madStr.replace(/\./g, '/').replace(/-/g, '/'));
+      const d2 = new Date(etdStr.replace(/\./g, '/').replace(/-/g, '/'));
+      if (isNaN(d1.getTime()) || isNaN(d2.getTime())) return "-";
+      const diffTime = d2 - d1;
+      return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     }
 
     function handleFile(file) {
@@ -734,7 +739,7 @@
           let normalizedRows = [];
           let detectedSPFromHeader = "8712";
 
-          let colMapping = { sp:-1, etd:-1, remark:-1, party:-1, dest:-1, countryPort:-1, delivery:-1, nw:-1, c20:-1, c40:-1, hc40:-1, ro20:-1, ro40:-1, rohc40:-1 };
+          let colMapping = { sp:-1, etd:-1, remark:-1, party:-1, dest:-1, countryPort:-1, delivery:-1, nw:-1, c20:-1, c40:-1, hc40:-1, ro20:-1, ro40:-1, rohc40:-1, voyage:-1, doNumber:-1, mad:-1 };
 
           if (headerRowIndex !== -1) {
             const headerRow = rawRows[headerRowIndex];
@@ -742,9 +747,11 @@
             let currentGroup = "";
 
             let bestRemarkIdx = -1;
-            let bestRemarkScore = 0; // 3 = Cargo Remark (Exact), 2 = Remark (Exact), 1 = Includes Remark
+            let bestRemarkScore = 0;
             let bestCountryIdx = -1;
-            let bestCountryScore = 0; // 3 = Country Port (Exact), 2 = Country (Exact), 1 = Includes Country
+            let bestCountryScore = 0;
+            let bestMadIdx = -1;
+            let bestMadScore = 0;
 
             headerRow.forEach((cell, colIdx) => {
               if (parentRow && parentRow[colIdx] !== undefined && parentRow[colIdx] !== null) {
@@ -759,6 +766,8 @@
               else if (cellText.includes("PARTY") || cellText === "BUYER") colMapping.party = colIdx;
               else if (cellText.includes("DESTINATION") || cellText === "PORT") colMapping.dest = colIdx;
               else if (cellText === "DELIVERY") colMapping.delivery = colIdx;
+              else if (cellText === "VOYAGE" || cellText === "VOY" || cellText.includes("VOY")) colMapping.voyage = colIdx;
+              else if (cellText.includes("DO NO") || cellText.includes("DO NUM") || cellText === "DO" || cellText.includes("D.O")) colMapping.doNumber = colIdx;
               else if (cellText === "NW" || cellText.includes("WEIGHT")) colMapping.nw = colIdx;
               else if (cellText.includes("20")) { currentGroup.includes("READY") ? colMapping.ro20 = colIdx : colMapping.c20 = colIdx; }
               else if (cellText.includes("40") && !cellText.includes("HC")) { currentGroup.includes("READY") ? colMapping.ro40 = colIdx : colMapping.c40 = colIdx; }
@@ -781,10 +790,20 @@
               } else if (cellText.includes("COUNTRY")) {
                 if (bestCountryScore < 1) { bestCountryIdx = colIdx; bestCountryScore = 1; }
               }
+
+              // PENSKORAN PRESISI UNTUK MAD
+              if (cellText === "MAD" || cellText === "M.A.D" || cellText === "MAD DATE") {
+                if (bestMadScore < 3) { bestMadIdx = colIdx; bestMadScore = 3; }
+              } else if (cellText.includes("MATERIAL AVAILABILITY") || cellText.includes("MUST ARRIVE")) {
+                if (bestMadScore < 2) { bestMadIdx = colIdx; bestMadScore = 2; }
+              } else if (cellText.includes("MAD") && !cellText.includes("REMARK") && !cellText.includes("MADE")) {
+                if (bestMadScore < 1) { bestMadIdx = colIdx; bestMadScore = 1; }
+              }
             });
 
             colMapping.remark = bestRemarkIdx;
             colMapping.countryPort = bestCountryIdx;
+            colMapping.mad = bestMadIdx;
           }
 
           const findKeyCaseInsensitive = (rowObj, searchWords) => {
@@ -821,19 +840,36 @@
             valCargoRemark = (valCargoRemark !== null && valCargoRemark !== undefined) ? valCargoRemark.toString().trim() : "";
             valCountryPort = (valCountryPort !== null && valCountryPort !== undefined) ? valCountryPort.toString().trim() : "";
 
-            // Parsing nilai raw SP
+            let valVoyage = colMapping.voyage !== -1 ? rawRowArray[colMapping.voyage] : (findKeyCaseInsensitive(row, ["VOYAGE", "VOY"]) || "-");
+            let valDoNumber = colMapping.doNumber !== -1 ? rawRowArray[colMapping.doNumber] : (findKeyCaseInsensitive(row, ["DO NUMBER", "DO NO", "DO NO.", "DO", "D.O."]) || "-");
+            
+            let rawMad = colMapping.mad !== -1 ? rawRowArray[colMapping.mad] : (findKeyCaseInsensitive(row, ["MAD", "M.A.D", "MAD DATE", "MATERIAL AVAILABILITY DATE", "MUST ARRIVE DATE"]) || "");
+            let valMad = "-";
+            if (rawMad !== null && rawMad !== undefined && rawMad !== "" && rawMad !== "-") {
+              const formattedMad = formatDate(rawMad);
+              valMad = formattedMad ? formattedMad : rawMad.toString().trim();
+            }
+
+            valVoyage = (valVoyage !== null && valVoyage !== undefined && valVoyage !== "") ? valVoyage.toString().trim() : "-";
+            valDoNumber = (valDoNumber !== null && valDoNumber !== undefined && valDoNumber !== "") ? valDoNumber.toString().trim() : "-";
+
             let rawSp = colMapping.sp !== -1 ? rawRowArray[colMapping.sp] : (row["SP"] || detectedSPFromHeader);
             let finalSp = normalizeSP(rawSp);
 
             if (etd && etd !== "ETD" && !etd.toString().toLowerCase().includes("total")) {
+              const formattedEtd = formatDate(etd);
               normalizedRows.push({
-                ETD: formatDate(etd),
+                ETD: formattedEtd,
                 "Product Form": "RL",
                 "Product Group": row["Product Group"] || "",
                 "Country Port": valCountryPort,
                 Carrier: row["Carrier"] || "N/A",
                 Delivery: colMapping.delivery !== -1 ? rawRowArray[colMapping.delivery] : (row["Delivery"] || "-"),
                 "Cargo Remark": valCargoRemark,
+                Voyage: valVoyage,
+                "DO Number": valDoNumber,
+                MAD: valMad,
+                "Selisih Hari": getDaysDiff(valMad, formattedEtd),
                 "20": colMapping.c20 !== -1 ? parseFloat(rawRowArray[colMapping.c20])||0 : (parseFloat(row["20"])||0),
                 "40": colMapping.c40 !== -1 ? parseFloat(rawRowArray[colMapping.c40])||0 : (parseFloat(row["40"])||0),
                 "40 HC": colMapping.hc40 !== -1 ? parseFloat(rawRowArray[colMapping.hc40])||0 : (parseFloat(row["40 HC"])||0),
@@ -877,20 +913,43 @@
     }
 
     function formatDate(rawVal) {
-      if (!rawVal) return "";
-      let str = rawVal.toString().trim();
-      if (!isNaN(str) && str.length >= 5) {
-        const excelDate = parseFloat(str);
-        const dateObj = new Date((excelDate - 25569) * 86400 * 1000);
-        return dateObj.toISOString().split('T')[0].replace(/-/g, '.');
+      if (rawVal === null || rawVal === undefined || rawVal === "" || rawVal === "-") return "-";
+      
+      if (rawVal instanceof Date) {
+        if (isNaN(rawVal.getTime())) return "-";
+        const y = rawVal.getFullYear();
+        const m = String(rawVal.getMonth() + 1).padStart(2, '0');
+        const d = String(rawVal.getDate()).padStart(2, '0');
+        if (y < 1920) return "-";
+        return `${y}.${m}.${d}`;
       }
-      str = str.replace(/-/g, '.');
+
+      let str = rawVal.toString().trim();
+      if (!str || str === "-" || str === "1900.01.01" || str === "1900-01-01" || str === "1/1/1900" || str === "01/01/1900" || str === "0") return "-";
+
+      if (!isNaN(str) && !isNaN(parseFloat(str)) && !str.includes(".")) {
+        const num = parseFloat(str);
+        if (num > 20000 && num < 70000) {
+          const dateObj = new Date(Math.round((num - 25569) * 86400 * 1000));
+          const year = dateObj.getUTCFullYear();
+          const month = String(dateObj.getUTCMonth() + 1).padStart(2, '0');
+          const day = String(dateObj.getUTCDate()).padStart(2, '0');
+          if (year < 1920) return "-";
+          return `${year}.${month}.${day}`;
+        } else if (num < 1000) {
+          return "-";
+        }
+      }
+
+      str = str.replace(/-/g, '.').replace(/\//g, '.');
       if (str.includes(" ")) str = str.split(" ")[0];
+
+      if (str.startsWith("1900.") || str.startsWith("1900-")) return "-";
+
       return str;
     }
 
     window.processAndDisplayData = function(data) {
-      // Otomatis menormalisasi nilai SP untuk data lama/data kustom agar memiliki suffix PM3/PM1
       originalData = data.map(row => {
         if (row.SP) {
           row.SP = normalizeSP(row.SP);
@@ -926,14 +985,13 @@
       const sortVal = document.getElementById('filter-sort').value;
 
       filteredData = originalData.filter(row => {
-        // Pemfilteran berbasis substring agar kompatibel dengan penambahan teks PM3 & PM1
         if (activeSpFilter !== '') {
           const rowSp = (row.SP || "").toString().toUpperCase();
           const targetSp = activeSpFilter.toUpperCase();
           if (!rowSp.includes(targetSp)) return false;
         }
         
-        const textToSearch = ((row["Country Port"] || "") + " " + (row["Ship to Party"] || "") + " " + (row["Destination Port"] || "") + " " + (row["Vessel"] || "")).toLowerCase();
+        const textToSearch = ((row["Country Port"] || "") + " " + (row["Ship to Party"] || "") + " " + (row["Destination Port"] || "") + " " + (row["Vessel"] || "") + " " + (row["Voyage"] || "") + " " + (row["DO Number"] || "") + " " + (row["MAD"] || "") + " " + (row["Delivery"] || "")).toLowerCase();
         const matchesSearch = !searchVal || textToSearch.includes(searchVal);
         const matchesRemark = !remarkVal || row["Cargo Remark"] === remarkVal;
         const matchesCarrier = !carrierVal || row["Carrier"] === carrierVal;
@@ -1039,7 +1097,7 @@
         const etd = row.ETD || "No ETD";
         if (!pivot[etd]) pivot[etd] = { rows: [], t20:0, t40:0, tHC:0, tR20:0, tR40:0, tRHC:0, tNW:0 };
         
-        let ex = pivot[etd].rows.find(r => r.sp === row.SP && r.remark === row["Cargo Remark"] && r.party === row["Ship to Party"]);
+        let ex = pivot[etd].rows.find(r => r.sp === row.SP && r.remark === row["Cargo Remark"] && r.party === row["Ship to Party"] && r.dest === row["Destination Port"]);
         if (ex) {
           ex.q20 += row["20"]||0; ex.q40 += row["40"]||0; ex.hc += row["40 HC"]||0; ex.nw += row["NW"]||0;
           ex.r20 += row["Ready Outs 20"]||0; ex.r40 += row["Ready Outs 40"]||0; ex.rhc += row["Ready Outs 40 HC"]||0;
@@ -1059,8 +1117,6 @@
           tr.className = "hover:bg-slate-50/70 text-[11px]";
           
           let tdEtd = idx === 0 ? `<td rowspan="${data.rows.length}" class="font-bold border-r bg-slate-50/50 px-2 align-top">${etd}</td>` : '';
-          
-          // Penentuan warna badge SP PM3 / PM1
           const isPM3 = r.sp.includes("8712");
           
           tr.innerHTML = `
@@ -1105,10 +1161,21 @@
       const paginated = filteredData.slice(start, start + itemsPerPage);
 
       if (paginated.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="14" class="text-center py-8 text-slate-400 font-semibold bg-white">Silakan Unggah Excel untuk Memuat Laporan.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="18" class="text-center py-8 text-slate-400 font-semibold bg-white">Silakan Unggah Excel untuk Memuat Laporan.</td></tr>';
         document.getElementById('details-table-info').textContent = "Menampilkan 0 data";
         return;
       }
+
+      // --- LOGIKA BARU: Memetakan Vessel & Voyage untuk mencari perbedaan ETD ---
+      const vesVoyMap = {};
+      filteredData.forEach(r => {
+        if (r.Vessel && r.Voyage && r.Vessel !== '-' && r.Vessel !== 'N/A') {
+          const key = `${r.Vessel}_${r.Voyage}`;
+          if (!vesVoyMap[key]) vesVoyMap[key] = new Set();
+          if (r.ETD) vesVoyMap[key].add(r.ETD);
+        }
+      });
+      // --------------------------------------------------------------------------
 
       paginated.forEach(row => {
         let badgeColor = "bg-slate-100 text-slate-600";
@@ -1118,16 +1185,34 @@
         else if(rm !== "n/a" && rm !== "-" && rm !== "") badgeColor = "bg-emerald-50 text-emerald-700 border border-emerald-200";
 
         const isPM3 = (row.SP || "").includes("8712");
+        
+        let selisihColor = 'text-slate-600';
+        if (row["Selisih Hari"] !== '-' && row["Selisih Hari"] !== undefined) {
+            if (row["Selisih Hari"] <= 2) selisihColor = 'text-rose-600';
+            else selisihColor = 'text-emerald-600';
+        }
+
+        // --- LOGIKA BARU: Terapkan gaya sel ETD jika terdapat konflik ---
+        const vKey = `${row.Vessel}_${row.Voyage}`;
+        let etdStyling = "px-2 font-semibold whitespace-nowrap"; // Default style
+        if (row.Vessel && row.Voyage && row.Vessel !== '-' && row.Vessel !== 'N/A' && vesVoyMap[vKey] && vesVoyMap[vKey].size > 1) {
+            etdStyling = "px-2 font-extrabold text-red-600 whitespace-nowrap"; // Merah & Tebal
+        }
+        // ----------------------------------------------------------------
 
         tbody.innerHTML += `
           <tr class="hover:bg-slate-50 text-[11px]">
             <td class="font-bold px-2 whitespace-nowrap">
               <span class="px-1 py-0.5 rounded text-[9px] ${isPM3 ? 'bg-blue-50 text-blue-700' : 'bg-emerald-50 text-emerald-700'}">${row.SP||'-'}</span>
             </td>
-            <td class="px-2 font-semibold whitespace-nowrap">${row.ETD||'-'}</td>
+            <td class="${etdStyling}">${row.ETD||'-'}</td>
             <td class="px-2 truncate max-w-[100px]">${row["Ship to Party"]||'-'}</td>
             <td class="px-2 truncate max-w-[80px]">${row["Destination Port"]||'-'}</td>
             <td class="px-2 italic whitespace-nowrap">${row.Vessel||'-'}</td>
+            <td class="px-2 whitespace-nowrap">${row.Voyage||'-'}</td>
+            <td class="px-2 whitespace-nowrap font-mono text-[10px]">${row["DO Number"]||'-'}</td>
+            <td class="px-2 whitespace-nowrap">${row.MAD||'-'}</td>
+            <td class="px-2 text-center font-bold ${selisihColor}">${row["Selisih Hari"] !== undefined ? row["Selisih Hari"] : '-'}</td>
             <td class="px-2 whitespace-nowrap">${row.Delivery||'-'}</td>
             <td class="px-2"><span class="px-1.5 py-0.5 rounded-full text-[9px] font-bold ${badgeColor} whitespace-nowrap">${row["Cargo Remark"]||'-'}</span></td>
             <td class="px-2 text-center bg-slate-100/40">${row["20"]||'-'}</td><td class="px-2 text-center bg-slate-100/40">${row["40"]||'-'}</td><td class="px-2 text-center font-semibold bg-slate-100/50">${row["40 HC"]||'-'}</td>
@@ -1269,12 +1354,10 @@
 
     window.addEventListener('DOMContentLoaded', async () => {
         const isSharedLink = await checkSharedLinkOnLoad();
-        
         if (!isSharedLink) {
             window.processAndDisplayData([]);
         }
     });
-
   </script>
 </body>
 </html>
