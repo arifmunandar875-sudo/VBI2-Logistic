@@ -173,7 +173,6 @@
       
       <section id="upload-section" class="bg-white rounded-xl border border-slate-200 shadow-sm p-2 print:hidden">
         <div class="flex flex-col md:flex-row items-center justify-between gap-3 px-2">
-          
           <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
             <div id="upload-wrapper" class="w-full sm:w-auto flex items-center gap-3 py-1.5 px-3.5 border border-slate-300 hover:border-indigo-500 hover:bg-indigo-50/20 rounded-lg cursor-pointer transition-all group">
               <input type="file" id="file-input" accept=".xlsx, .xls, .csv" class="hidden" />
@@ -203,13 +202,17 @@
       </section>
 
       <section id="dashboard-content" class="flex flex-col gap-4">
+        
+        <!-- Filters Area -->
         <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 flex flex-col gap-3 print:hidden">
           <div class="pb-2 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div><span class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Filter Utama SP</span></div>
             <div class="flex flex-wrap gap-1.5" id="sp-filter-group">
               <button onclick="window.setSpFilter('')" id="sp-btn-all" class="px-3 py-1.5 text-xs font-bold rounded-md border border-indigo-600 bg-indigo-600 text-white shadow-sm transition-all flex items-center gap-1.5"><i data-lucide="layout-grid" class="w-3.5 h-3.5"></i> Semua SP</button>
               <button onclick="window.setSpFilter('8712')" id="sp-btn-8712" class="px-3 py-1.5 text-xs font-semibold rounded-md border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-all flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-blue-500"></span> SP: 8712 (PM3)</button>
+              <button onclick="window.setSpFilter('PM1')" id="sp-btn-pm1" class="px-3 py-1.5 text-xs font-semibold rounded-md border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-all flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Semua PM1 (871C & 871K)</button>
               <button onclick="window.setSpFilter('871C')" id="sp-btn-871c" class="px-3 py-1.5 text-xs font-semibold rounded-md border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-all flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> SP: 871C (PM1)</button>
+              <button onclick="window.setSpFilter('871K')" id="sp-btn-871k" class="px-3 py-1.5 text-xs font-semibold rounded-md border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-all flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> SP: 871K (PM1)</button>
             </div>
           </div>
           <div>
@@ -217,13 +220,19 @@
               <div class="flex items-center gap-1.5"><i data-lucide="filter" class="w-3.5 h-3.5 text-slate-500"></i><h3 class="font-bold text-[10px] uppercase tracking-wider text-slate-600">Penyaringan Data Tambahan</h3></div>
               <button onclick="window.resetFilters()" class="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 transition-colors flex items-center gap-1"><i data-lucide="refresh-cw" class="w-2.5 h-2.5"></i> Reset Semua</button>
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2">
               <div>
                 <label class="block text-[9px] font-bold text-slate-400 uppercase mb-0.5">Pencarian</label>
                 <div class="relative">
                   <input type="text" id="filter-search" oninput="window.applyFilters()" placeholder="Tujuan, Buyer, Delivery, dll..." class="w-full pl-7 pr-2 py-1 text-xs bg-slate-50 border border-slate-200 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500" />
                   <i data-lucide="search" class="w-3 h-3 text-slate-400 absolute left-2.5 top-2.5"></i>
                 </div>
+              </div>
+              <div>
+                <label class="block text-[9px] font-bold text-slate-400 uppercase mb-0.5">Bulan ETD</label>
+                <select id="filter-month" onchange="window.applyFilters()" class="w-full px-2 py-1 text-xs bg-slate-50 border border-slate-200 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                  <option value="">Semua Bulan</option>
+                </select>
               </div>
               <div>
                 <label class="block text-[9px] font-bold text-slate-400 uppercase mb-0.5">Cargo Remark</label>
@@ -264,14 +273,14 @@
             </div>
           </div>
 
-          <div id="chart-grid" class="grid grid-cols-2 gap-2">
+          <div id="chart-grid" class="grid grid-cols-1 md:grid-cols-2 gap-2">
             <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-2">
-              <h3 class="font-bold text-slate-900 text-[9px] uppercase tracking-wider mb-1 flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-indigo-600"></span> ETD per Day</h3>
-              <div class="relative h-44"><canvas id="combinedDailyChart"></canvas></div>
+              <h3 class="font-bold text-slate-900 text-[9px] uppercase tracking-wider mb-1 flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-indigo-600"></span> Weekly ETD</h3>
+              <div class="relative h-60"><canvas id="weeklyChart"></canvas></div>
             </div>
             <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-2">
               <h3 class="font-bold text-slate-900 text-[10px] uppercase tracking-wider mb-1 flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span> ETD per Month</h3>
-              <div class="relative h-44"><canvas id="monthlyChart"></canvas></div>
+              <div class="relative h-60"><canvas id="monthlyChart"></canvas></div>
             </div>
           </div>
         </div>
@@ -388,8 +397,10 @@
     let activeSpFilter = '';
     let currentPage = 1;
     const itemsPerPage = 20;
-    let combinedDailyChartInstance = null;
+    
+    let weeklyChartInstance = null;
     let monthlyChartInstance = null;
+    
     let currentFileName = "Tidak_ada_file.xlsx";
     let isReadOnlyMode = false;
     let currentUser = null;
@@ -603,6 +614,8 @@
       document.getElementById('filter-search').value = "";
       document.getElementById('filter-remark').value = "";
       document.getElementById('filter-carrier').value = "";
+      const filterMonth = document.getElementById('filter-month');
+      if (filterMonth) filterMonth.value = "";
       document.getElementById('filter-sort').value = "asc";
       window.setSpFilter('');
     };
@@ -611,15 +624,23 @@
       activeSpFilter = spCode;
       const btnAll = document.getElementById('sp-btn-all');
       const btn8712 = document.getElementById('sp-btn-8712');
+      const btnPM1 = document.getElementById('sp-btn-pm1');
       const btn871C = document.getElementById('sp-btn-871c');
+      const btn871K = document.getElementById('sp-btn-871k');
 
-      btnAll.className = "px-3 py-1.5 text-xs font-semibold rounded-md border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-all flex items-center gap-1.5";
-      btn8712.className = "px-3 py-1.5 text-xs font-semibold rounded-md border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-all flex items-center gap-1.5";
-      btn871C.className = "px-3 py-1.5 text-xs font-semibold rounded-md border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-all flex items-center gap-1.5";
+      const defaultClass = "px-3 py-1.5 text-xs font-semibold rounded-md border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-all flex items-center gap-1.5";
 
-      if (spCode === '') btnAll.className = "px-3 py-1.5 text-xs font-bold rounded-md border border-indigo-600 bg-indigo-600 text-white shadow-sm transition-all flex items-center gap-1.5";
-      else if (spCode === '8712') btn8712.className = "px-3 py-1.5 text-xs font-bold rounded-md border border-blue-600 bg-blue-50 text-blue-700 shadow-sm transition-all flex items-center gap-1.5";
-      else if (spCode === '871C') btn871C.className = "px-3 py-1.5 text-xs font-bold rounded-md border border-emerald-600 bg-emerald-50 text-emerald-700 shadow-sm transition-all flex items-center gap-1.5";
+      if (btnAll) btnAll.className = defaultClass;
+      if (btn8712) btn8712.className = defaultClass;
+      if (btnPM1) btnPM1.className = defaultClass;
+      if (btn871C) btn871C.className = defaultClass;
+      if (btn871K) btn871K.className = defaultClass;
+
+      if (spCode === '' && btnAll) btnAll.className = "px-3 py-1.5 text-xs font-bold rounded-md border border-indigo-600 bg-indigo-600 text-white shadow-sm transition-all flex items-center gap-1.5";
+      else if (spCode === '8712' && btn8712) btn8712.className = "px-3 py-1.5 text-xs font-bold rounded-md border border-blue-600 bg-blue-50 text-blue-700 shadow-sm transition-all flex items-center gap-1.5";
+      else if (spCode.toUpperCase() === 'PM1' && btnPM1) btnPM1.className = "px-3 py-1.5 text-xs font-bold rounded-md border border-emerald-600 bg-emerald-50 text-emerald-700 shadow-sm transition-all flex items-center gap-1.5";
+      else if (spCode.toUpperCase() === '871C' && btn871C) btn871C.className = "px-3 py-1.5 text-xs font-bold rounded-md border border-emerald-600 bg-emerald-50 text-emerald-700 shadow-sm transition-all flex items-center gap-1.5";
+      else if (spCode.toUpperCase() === '871K' && btn871K) btn871K.className = "px-3 py-1.5 text-xs font-bold rounded-md border border-emerald-600 bg-emerald-50 text-emerald-700 shadow-sm transition-all flex items-center gap-1.5";
 
       window.applyFilters();
     };
@@ -683,6 +704,7 @@
       const clean = rawSp.toString().trim();
       if (clean === "8712") return "8712 (PM3)";
       if (clean.toUpperCase() === "871C") return "871C (PM1)";
+      if (clean.toUpperCase() === "871K") return "871K (PM1)";
       return clean;
     }
 
@@ -773,7 +795,6 @@
               else if (cellText.includes("40") && !cellText.includes("HC")) { currentGroup.includes("READY") ? colMapping.ro40 = colIdx : colMapping.c40 = colIdx; }
               else if (cellText.includes("HC")) { currentGroup.includes("READY") ? colMapping.rohc40 = colIdx : colMapping.hc40 = colIdx; }
 
-              // PENSKORAN UNTUK CARGO REMARK
               if (cellText === "CARGO REMARK" || cellText === "CARGO REMARKS") {
                 if (bestRemarkScore < 3) { bestRemarkIdx = colIdx; bestRemarkScore = 3; }
               } else if (cellText === "REMARK" || cellText === "REMARKS") {
@@ -782,7 +803,6 @@
                 if (bestRemarkScore < 1) { bestRemarkIdx = colIdx; bestRemarkScore = 1; }
               }
 
-              // PENSKORAN UNTUK COUNTRY PORT
               if (cellText === "COUNTRY PORT" || cellText === "COUNTRY/PORT") {
                 if (bestCountryScore < 3) { bestCountryIdx = colIdx; bestCountryScore = 3; }
               } else if (cellText === "COUNTRY" || cellText === "PORT") {
@@ -791,7 +811,6 @@
                 if (bestCountryScore < 1) { bestCountryIdx = colIdx; bestCountryScore = 1; }
               }
 
-              // PENSKORAN PRESISI UNTUK MAD
               if (cellText === "MAD" || cellText === "M.A.D" || cellText === "MAD DATE") {
                 if (bestMadScore < 3) { bestMadIdx = colIdx; bestMadScore = 3; }
               } else if (cellText.includes("MATERIAL AVAILABILITY") || cellText.includes("MUST ARRIVE")) {
@@ -856,7 +875,12 @@
             let rawSp = colMapping.sp !== -1 ? rawRowArray[colMapping.sp] : (row["SP"] || detectedSPFromHeader);
             let finalSp = normalizeSP(rawSp);
 
-            if (etd && etd !== "ETD" && !etd.toString().toLowerCase().includes("total")) {
+            const etdStr = etd !== null && etd !== undefined ? etd.toString().trim() : "";
+            const isInvalidRow = etdStr.toUpperCase() === "ETD" || etdStr.toLowerCase().includes("total");
+            const hasRowData = rawRowArray.some(c => c !== null && c !== undefined && c.toString().trim() !== "") ||
+                              Object.values(row).some(v => v !== null && v !== undefined && v.toString().trim() !== "");
+
+            if (!isInvalidRow && hasRowData) {
               const formattedEtd = formatDate(etd);
               normalizedRows.push({
                 ETD: formattedEtd,
@@ -963,10 +987,20 @@
     };
 
     function populateFilterOptions() {
-      const remarksSet = new Set(), carriersSet = new Set();
+      const remarksSet = new Set(), carriersSet = new Set(), monthsSet = new Set();
+      let hasBlankEtd = false;
+
       originalData.forEach(row => {
         if (row["Cargo Remark"]) remarksSet.add(row["Cargo Remark"]);
         if (row["Carrier"] && row["Carrier"] !== "N/A") carriersSet.add(row["Carrier"]);
+        
+        const etd = row.ETD || "-";
+        if (etd === "-" || etd === "" || etd.toLowerCase() === "blank") {
+          hasBlankEtd = true;
+        } else if (etd.length >= 7) {
+          const ym = etd.substring(0, 7).replace('-', '.');
+          monthsSet.add(ym);
+        }
       });
 
       const selectRemark = document.getElementById('filter-remark');
@@ -976,19 +1010,50 @@
       const selectCarrier = document.getElementById('filter-carrier');
       selectCarrier.innerHTML = '<option value="">Semua Carrier</option>';
       [...carriersSet].sort().forEach(c => selectCarrier.innerHTML += `<option value="${c}">${c}</option>`);
+
+      const selectMonth = document.getElementById('filter-month');
+      if (selectMonth) {
+        selectMonth.innerHTML = '<option value="">Semua Bulan</option>';
+        const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+        
+        [...monthsSet].sort().forEach(ym => {
+          const parts = ym.split('.');
+          let label = ym;
+          if (parts.length === 2) {
+            const mIdx = parseInt(parts[1], 10) - 1;
+            if (mIdx >= 0 && mIdx < 12) {
+              label = `${parts[0]}.${parts[1]} - ${monthNames[mIdx]}`;
+            }
+          }
+          selectMonth.innerHTML += `<option value="${ym}">${label}</option>`;
+        });
+
+        if (hasBlankEtd) {
+          selectMonth.innerHTML += `<option value="BLANK">Blank / Tanpa ETD</option>`;
+        }
+      }
     }
 
     window.applyFilters = function() {
       const searchVal = document.getElementById('filter-search').value.toLowerCase();
       const remarkVal = document.getElementById('filter-remark').value;
       const carrierVal = document.getElementById('filter-carrier').value;
+      const monthFilter = document.getElementById('filter-month');
+      const monthVal = monthFilter ? monthFilter.value : "";
       const sortVal = document.getElementById('filter-sort').value;
 
       filteredData = originalData.filter(row => {
         if (activeSpFilter !== '') {
           const rowSp = (row.SP || "").toString().toUpperCase();
           const targetSp = activeSpFilter.toUpperCase();
-          if (!rowSp.includes(targetSp)) return false;
+          
+          if (targetSp === 'PM1') {
+            if (!rowSp.includes('871C') && !rowSp.includes('871K') && !rowSp.includes('PM1')) return false;
+          } else if (targetSp === 'PM3' || targetSp === '8712') {
+            if (!rowSp.includes('8712') && !rowSp.includes('PM3')) return false;
+          } else {
+            if (!rowSp.includes(targetSp)) return false;
+          }
         }
         
         const textToSearch = ((row["Country Port"] || "") + " " + (row["Ship to Party"] || "") + " " + (row["Destination Port"] || "") + " " + (row["Vessel"] || "") + " " + (row["Voyage"] || "") + " " + (row["DO Number"] || "") + " " + (row["MAD"] || "") + " " + (row["Delivery"] || "")).toLowerCase();
@@ -996,11 +1061,24 @@
         const matchesRemark = !remarkVal || row["Cargo Remark"] === remarkVal;
         const matchesCarrier = !carrierVal || row["Carrier"] === carrierVal;
 
-        return matchesSearch && matchesRemark && matchesCarrier;
+        let matchesMonth = true;
+        if (monthVal) {
+          const etd = row.ETD || "-";
+          if (monthVal === "BLANK") {
+            matchesMonth = (etd === "-" || etd === "" || etd.toLowerCase() === "blank");
+          } else {
+            const rowYm = etd.length >= 7 ? etd.substring(0, 7).replace('-', '.') : "";
+            matchesMonth = (rowYm === monthVal);
+          }
+        }
+
+        return matchesSearch && matchesRemark && matchesCarrier && matchesMonth;
       });
 
       filteredData.sort((a, b) => {
-        return sortVal === "asc" ? new String(a.ETD).localeCompare(b.ETD) : new String(b.ETD).localeCompare(a.ETD);
+        const etdA = a.ETD && a.ETD !== "-" ? a.ETD : (sortVal === "asc" ? "9999.99.99" : "0000.00.00");
+        const etdB = b.ETD && b.ETD !== "-" ? b.ETD : (sortVal === "asc" ? "9999.99.99" : "0000.00.00");
+        return sortVal === "asc" ? etdA.localeCompare(etdB) : etdB.localeCompare(etdA);
       });
 
       currentPage = 1;
@@ -1035,54 +1113,128 @@
     }
 
     function renderCharts() {
-      const etdGroups = {}, monthlyGroups = {};
+      const weeklyGroups = {}, monthlyGroups = {};
       
       filteredData.forEach(row => {
-        const date = row.ETD || "Unknown";
-        if (!etdGroups[date]) etdGroups[date] = { "40 HC": 0, NW: 0 };
-        etdGroups[date]["40 HC"] += row["40 HC"] || 0; etdGroups[date].NW += row["NW"] || 0;
+        const date = row.ETD && row.ETD !== "-" ? row.ETD : "Blank ETD";
+        
+        let wKey = "Tanpa ETD";
+        let wSortKey = "9999.99.9";
 
-        if (date.length >= 7) {
-          const ym = date.substring(0, 7);
-          if (!monthlyGroups[ym]) monthlyGroups[ym] = { "40 HC": 0, NW: 0 };
-          monthlyGroups[ym]["40 HC"] += row["40 HC"] || 0; monthlyGroups[ym].NW += row["NW"] || 0;
+        if (date !== "Blank ETD" && date.length >= 10) {
+            const parts = date.split('.');
+            if (parts.length === 3) {
+                const y = parts[0];
+                const mNum = parseInt(parts[1], 10);
+                const d = parseInt(parts[2], 10);
+                
+                const wNum = Math.ceil(d / 7);
+                const mNames = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
+                const monthName = mNames[mNum - 1] || parts[1];
+                
+                wKey = `Week ${wNum} ${monthName} ${y}`;
+                wSortKey = `${y}.${parts[1]}.${wNum}`;
+            }
         }
+
+        if (!weeklyGroups[wSortKey]) weeklyGroups[wSortKey] = { "40 HC": 0, NW: 0, label: wKey };
+        weeklyGroups[wSortKey]["40 HC"] += row["40 HC"] || 0; 
+        weeklyGroups[wSortKey].NW += row["NW"] || 0;
+
+        let mKey = "Tanpa ETD";
+        let mSortKey = "9999.99";
+
+        if (date !== "Blank ETD" && date.length >= 7) {
+            const parts = date.split('.');
+            if (parts.length >= 2) {
+                const y = parts[0];
+                const mNum = parseInt(parts[1], 10);
+                
+                const mNamesFull = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+                const monthNameFull = mNamesFull[mNum - 1] || parts[1];
+                
+                mKey = `${monthNameFull} ${y}`;
+                mSortKey = `${y}.${parts[1]}`;
+            }
+        }
+        
+        if (!monthlyGroups[mSortKey]) monthlyGroups[mSortKey] = { "40 HC": 0, NW: 0, label: mKey };
+        monthlyGroups[mSortKey]["40 HC"] += row["40 HC"] || 0; 
+        monthlyGroups[mSortKey].NW += row["NW"] || 0;
       });
 
-      const sDates = Object.keys(etdGroups).sort();
-      if (combinedDailyChartInstance) combinedDailyChartInstance.destroy();
-      
-      if (sDates.length === 0) return; 
-
-      combinedDailyChartInstance = new Chart(document.getElementById('combinedDailyChart').getContext('2d'), {
-        type: 'bar',
-        data: {
-          labels: sDates,
-          datasets: [
-            { label: '40 HC', type: 'bar', data: sDates.map(d => etdGroups[d]["40 HC"]), backgroundColor: '#4f46e5', yAxisID: 'y' },
-            { label: 'NW (MT)', type: 'line', data: sDates.map(d => etdGroups[d].NW), borderColor: '#10b981', yAxisID: 'y1' }
-          ]
+      const commonOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          datalabels: {
+            formatter: (val) => val === 0 ? '' : val.toLocaleString('id-ID', {maximumFractionDigits: 1}),
+            font: function(context) {
+              if (context.dataset.label === '40 HC') return { weight: '800', family: 'Plus Jakarta Sans', size: 10 };
+              return { style: 'italic', family: 'Georgia, serif', size: 10, weight: 'bold' };
+            },
+            color: function(context) {
+              return context.dataset.label === '40 HC' ? '#ffffff' : '#047857';
+            },
+            anchor: function(context) { return context.datasetIndex === 0 ? 'center' : 'end'; },
+            align: function(context) { return context.datasetIndex === 0 ? 'center' : 'top'; }
+          },
+          legend: {
+            labels: {
+              generateLabels: function(chart) {
+                const original = Chart.defaults.plugins.legend.labels.generateLabels(chart);
+                original.forEach(label => {
+                  if (label.text === '40 HC') {
+                    label.font = { weight: '800', family: 'Plus Jakarta Sans' };
+                  } else {
+                    label.font = { style: 'italic', family: 'Georgia, serif', weight: 'bold' };
+                  }
+                });
+                return original;
+              }
+            }
+          }
         },
-        options: { responsive: true, maintainAspectRatio: false, scales: { x:{display:false}, y: { position: 'left' }, y1: { position: 'right', grid:{drawOnChartArea:false} } } }
-      });
+        scales: { 
+          x: { display: true, ticks: { font: { size: 9, family: 'Plus Jakarta Sans' }, maxRotation: 45, minRotation: 45 } }, 
+          y: { position: 'left', beginAtZero: true }, 
+          y1: { position: 'right', grid: { drawOnChartArea: false }, beginAtZero: true } 
+        }
+      };
 
-      const sMonths = Object.keys(monthlyGroups).sort();
-      const monthNames = sMonths.map(m => {
-          const parts = m.split('.'); return parts.length > 1 ? ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"][parseInt(parts[1])-1] + " " + parts[0] : m;
-      });
+      const sWeeks = Object.keys(weeklyGroups).sort();
+      if (weeklyChartInstance) weeklyChartInstance.destroy();
       
+      if (sWeeks.length > 0) {
+          weeklyChartInstance = new Chart(document.getElementById('weeklyChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+              labels: sWeeks.map(k => weeklyGroups[k].label),
+              datasets: [
+                { label: '40 HC', type: 'bar', data: sWeeks.map(k => weeklyGroups[k]["40 HC"]), backgroundColor: '#4f46e5', borderRadius: 4, yAxisID: 'y' },
+                { label: 'NW (MT)', type: 'line', data: sWeeks.map(k => weeklyGroups[k].NW), borderColor: '#10b981', borderWidth: 2, pointBackgroundColor: '#10b981', tension: 0.3, yAxisID: 'y1' }
+              ]
+            },
+            options: commonOptions
+          });
+      }
+
+      const sMonthsKeys = Object.keys(monthlyGroups).sort();
       if (monthlyChartInstance) monthlyChartInstance.destroy();
-      monthlyChartInstance = new Chart(document.getElementById('monthlyChart').getContext('2d'), {
-        type: 'bar',
-        data: {
-          labels: monthNames,
-          datasets: [
-            { label: '40 HC', type: 'bar', data: sMonths.map(m => monthlyGroups[m]["40 HC"]), backgroundColor: '#3b82f6', yAxisID: 'y' },
-            { label: 'NW (MT)', type: 'line', data: sMonths.map(m => monthlyGroups[m].NW), borderColor: '#f59e0b', yAxisID: 'y1' }
-          ]
-        },
-        options: { responsive: true, maintainAspectRatio: false, scales: { x:{display:false}, y: { position: 'left' }, y1: { position: 'right', grid:{drawOnChartArea:false} } } }
-      });
+      
+      if (sMonthsKeys.length > 0) {
+          monthlyChartInstance = new Chart(document.getElementById('monthlyChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+              labels: sMonthsKeys.map(k => monthlyGroups[k].label),
+              datasets: [
+                { label: '40 HC', type: 'bar', data: sMonthsKeys.map(k => monthlyGroups[k]["40 HC"]), backgroundColor: '#3b82f6', borderRadius: 4, yAxisID: 'y' },
+                { label: 'NW (MT)', type: 'line', data: sMonthsKeys.map(k => monthlyGroups[k].NW), borderColor: '#f59e0b', borderWidth: 2, pointBackgroundColor: '#f59e0b', tension: 0.3, yAxisID: 'y1' }
+              ]
+            },
+            options: commonOptions
+          });
+      }
     }
 
     function renderPivotTable() {
@@ -1094,7 +1246,7 @@
 
       const pivot = {};
       filteredData.forEach(row => {
-        const etd = row.ETD || "No ETD";
+        const etd = (row.ETD && row.ETD !== "-") ? row.ETD : "Blank / Tanpa ETD";
         if (!pivot[etd]) pivot[etd] = { rows: [], t20:0, t40:0, tHC:0, tR20:0, tR40:0, tRHC:0, tNW:0 };
         
         let ex = pivot[etd].rows.find(r => r.sp === row.SP && r.remark === row["Cargo Remark"] && r.party === row["Ship to Party"] && r.dest === row["Destination Port"]);
@@ -1117,11 +1269,17 @@
           tr.className = "hover:bg-slate-50/70 text-[11px]";
           
           let tdEtd = idx === 0 ? `<td rowspan="${data.rows.length}" class="font-bold border-r bg-slate-50/50 px-2 align-top">${etd}</td>` : '';
-          const isPM3 = r.sp.includes("8712");
+          const spUpper = r.sp.toUpperCase();
+          const isPM3 = spUpper.includes("8712");
+          const isPM1 = spUpper.includes("871C") || spUpper.includes("871K") || spUpper.includes("PM1");
+          
+          let spBadgeClass = 'bg-slate-100 text-slate-800';
+          if (isPM3) spBadgeClass = 'bg-blue-100 text-blue-800';
+          else if (isPM1) spBadgeClass = 'bg-emerald-100 text-emerald-800';
           
           tr.innerHTML = `
             <td class="border-r font-bold px-2 whitespace-nowrap">
-              <span class="px-1 py-0.5 rounded text-[9px] ${isPM3 ? 'bg-blue-100 text-blue-800' : 'bg-emerald-100 text-emerald-800'}">${r.sp}</span>
+              <span class="px-1 py-0.5 rounded text-[9px] ${spBadgeClass}">${r.sp}</span>
             </td>
             ${tdEtd}
             <td class="border-r px-2 whitespace-nowrap text-slate-700">${r.remark||'-'}</td>
@@ -1166,7 +1324,6 @@
         return;
       }
 
-      // --- LOGIKA BARU: Memetakan Vessel & Voyage untuk mencari perbedaan ETD ---
       const vesVoyMap = {};
       filteredData.forEach(r => {
         if (r.Vessel && r.Voyage && r.Vessel !== '-' && r.Vessel !== 'N/A') {
@@ -1175,7 +1332,6 @@
           if (r.ETD) vesVoyMap[key].add(r.ETD);
         }
       });
-      // --------------------------------------------------------------------------
 
       paginated.forEach(row => {
         let badgeColor = "bg-slate-100 text-slate-600";
@@ -1184,26 +1340,30 @@
         else if(rm.includes("mad")) badgeColor = "bg-indigo-50 text-indigo-700 border border-indigo-200";
         else if(rm !== "n/a" && rm !== "-" && rm !== "") badgeColor = "bg-emerald-50 text-emerald-700 border border-emerald-200";
 
-        const isPM3 = (row.SP || "").includes("8712");
+        const spUpper = (row.SP || "").toUpperCase();
+        const isPM3 = spUpper.includes("8712");
+        const isPM1 = spUpper.includes("871C") || spUpper.includes("871K") || spUpper.includes("PM1");
         
+        let spBadgeClass = "bg-slate-50 text-slate-700";
+        if (isPM3) spBadgeClass = "bg-blue-50 text-blue-700";
+        else if (isPM1) spBadgeClass = "bg-emerald-50 text-emerald-700";
+
         let selisihColor = 'text-slate-600';
         if (row["Selisih Hari"] !== '-' && row["Selisih Hari"] !== undefined) {
             if (row["Selisih Hari"] <= 2) selisihColor = 'text-rose-600';
             else selisihColor = 'text-emerald-600';
         }
 
-        // --- LOGIKA BARU: Terapkan gaya sel ETD jika terdapat konflik ---
         const vKey = `${row.Vessel}_${row.Voyage}`;
-        let etdStyling = "px-2 font-semibold whitespace-nowrap"; // Default style
+        let etdStyling = "px-2 font-semibold whitespace-nowrap"; 
         if (row.Vessel && row.Voyage && row.Vessel !== '-' && row.Vessel !== 'N/A' && vesVoyMap[vKey] && vesVoyMap[vKey].size > 1) {
-            etdStyling = "px-2 font-extrabold text-red-600 whitespace-nowrap"; // Merah & Tebal
+            etdStyling = "px-2 font-extrabold text-red-600 whitespace-nowrap"; 
         }
-        // ----------------------------------------------------------------
 
         tbody.innerHTML += `
           <tr class="hover:bg-slate-50 text-[11px]">
             <td class="font-bold px-2 whitespace-nowrap">
-              <span class="px-1 py-0.5 rounded text-[9px] ${isPM3 ? 'bg-blue-50 text-blue-700' : 'bg-emerald-50 text-emerald-700'}">${row.SP||'-'}</span>
+              <span class="px-1 py-0.5 rounded text-[9px] ${spBadgeClass}">${row.SP||'-'}</span>
             </td>
             <td class="${etdStyling}">${row.ETD||'-'}</td>
             <td class="px-2 truncate max-w-[100px]">${row["Ship to Party"]||'-'}</td>
